@@ -8,6 +8,7 @@
 import Painel from "../shared/painel/Painel.vue";
 import ImagemResponsiva from "../shared/imagem-responsiva/ImagemResponsiva.vue";
 import Botao from '../shared/botao/Botao.vue';
+import FotoService from '../../domain/foto/FotoService';
 
 export default {
   components: {
@@ -18,9 +19,19 @@ export default {
 
   methods: {
     remove(foto) {
-      if(confirm('Confirma?')) {
-        alert(foto.titulo)
-      }
+      this.service
+        .apaga(foto._id)
+        .then(
+          () => {
+            let indice = this.fotos.indexOf(foto);
+            this.fotos.splice(indice, 1);
+            this.mensagem = 'Foto removida com sucesso'
+          }, 
+          err => {
+            this.mensagem = 'Não foi possível remover a foto';
+            console.log(err);
+          }
+        )
     }
   },
 
@@ -28,7 +39,8 @@ export default {
     return {
       titulo: 'Alurapic',
       fotos: [],
-      filtro: ""
+      filtro: "",
+      mensagem: ''
     }
   },
 
@@ -44,9 +56,14 @@ export default {
   },
 
   created() {
-    this.$http
-      .get("http://localhost:3000/v1/fotos")
-      .then(res => res.json())
-      .then(fotos => (this.fotos = fotos), err => console.log(err));
-  }
+     //criando uma instância do nosso serviço que depende de $resource
+     this.service = new FotoService(this.$resource);
+     this.service
+       .lista()
+       .then(fotos => this.fotos = fotos, err => this.mensagem = err.message);
+  //   this.$http
+  //     .get("http://localhost:3000/v1/fotos")
+  //     .then(res => res.json())
+  //     .then(fotos => (this.fotos = fotos), err => console.log(err));
+   }
 }
